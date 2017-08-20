@@ -1,3 +1,10 @@
+/*
+ * Description: Small javascript library built upon d3, which plots
+ *              geospatial data and allows limited interaction with it.
+ * Author:      Aleksejus Kononovicius (http://kononovicius.lt)
+ * URL:         https://github.com/akononovicius/interactive-map
+ * License:     WTFPLv2 (http://www.wtfpl.net/)
+ */
 class map {
     constructor(wrapperId,dimensions,regionStrokeWidth=[0.5,2],regionStrokeColor=["#fff","#000"],
                 mapScalingConstant=1.8,legendForm=[10,550,2,16,2],legendColorForm=[50,10,10,10],

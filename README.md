@@ -20,10 +20,6 @@ GeoJSON file must have two additional fields:
 * "columnNames" - array of strings, which specify index and plotable data stored in geo object "properties"
 * "defaultColumnId" - integer specifying which of columnNames is plotted on default (e.g., on load)
 
-# License
-
-Work done here is rather trivial, so feel free to use it under [WTFPL](http://www.wtfpl.net/).
-
 # Note on importing d3 library
 
 Note that this library here requires "extended" version of d3 v4.10. You could use [https://github.com/wbkd/d3-extended](https://github.com/wbkd/d3-extended) or alternatively you could import normal d3 and execute the following javascript code before creating map objects
@@ -34,3 +30,8 @@ d3.selection.prototype.moveToFront = function() {
     });
 };
 ```
+
+# License
+
+Work done here is rather trivial, so feel free to use it under [WTFPL](http://www.wtfpl.net/).
+
