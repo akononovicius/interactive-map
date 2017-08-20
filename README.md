@@ -33,5 +33,5 @@ d3.selection.prototype.moveToFront = function() {
 
 # License
 
-Work done here is rather trivial, so feel free to use it under [WTFPL](http://www.wtfpl.net/).
+Work done here is rather trivial, so feel free to use it under [WTFPL version 2](http://www.wtfpl.net/).
 

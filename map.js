@@ -3,7 +3,7 @@
  *              geospatial data and allows limited interaction with it.
  * Author:      Aleksejus Kononovicius (http://kononovicius.lt)
  * URL:         https://github.com/akononovicius/interactive-map
- * License:     WTFPLv2 (http://www.wtfpl.net/)
+ * License:     WTFPL version 2 (http://www.wtfpl.net/)
  */
 class map {
     constructor(wrapperId,dimensions,regionStrokeWidth=[0.5,2],regionStrokeColor=["#fff","#000"],
