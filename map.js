@@ -26,10 +26,10 @@ class map {
          * load data from url, which points to json file in GeoJSON format (+ some additional info)
          *
          * Additional info (not present in GeoJSON format):
-         * + columnNames - array with strings which contain names for values stored in properties
-         *   (first column must be index)
-         * + defaultColumnId - indicates which data is shown by default (give id of a string in
-         *   columnNames)
+         * + columnNames - array of strings, which specify index and plotable data stored in
+         *   geo object "properties" 
+         * + defaultColumnId - integer specifying which of columnNames is plotted on default
+         *   (e.g., on load) 
          */
         d3.json(url,this.processData.bind(this));
     }
