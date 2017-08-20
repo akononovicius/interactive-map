@@ -212,7 +212,7 @@ class map {
         return d3.geoMercator()
             .center(params["center"])
             .scale(params["scale"])
-            .translate([width/2,height/2]);
+            .translate([this.dimensions[0]/2,this.dimensions[1]/2]);
     }
     setupProjectionParams(data) {
         // get bounding box
