@@ -57,17 +57,23 @@
              * load data from url, which points to json file in GeoJSON format (+ some additional info)
              *
              * Additional info (not present in GeoJSON format):
-             * + columnNames - array of strings, which specify index and plotable data stored in
-             *   geo object "properties" 
+             * + indexColumnName - which of the "properties" field specifies unique index for the
+             *   stored geo object
+             * + columnNames - array of strings, which specify plotable data stored in geo object
+             *   "properties" field 
              * + defaultColumnId - integer specifying which of columnNames is plotted on default
              *   (e.g., on load) 
              */
             d3.json(url,this.processData.bind(this));
         }
+        loadDataJSON(geojsonString) {
+            // load data from string in the extended GeoJSON format (see loadData for more details)
+            this.processData(false,JSON.parse(geojsonString));
+        }
         processData(error,data) {
             if(error) return console.error(error);
-            // get names of columns labeling data
             this.columnNames=data["columnNames"];
+            this.indexColumnName=data["indexColumnName"];
             // obtain projection tailored to data
             var projection=this.setupProjection(data);
             // create function to define paths
@@ -103,15 +109,14 @@
             var wrapper=d3.select("#"+this.wrapperId);
             var upperControls=wrapper.insert("div",":first-child").attr("class","upperControls");
             var dataSelector=upperControls.append("select").attr("class","dataSelector");
-            var dataColumnNames=columnNames.slice(1);//first is an index, so we need others
             dataSelector.selectAll("option")
-                .data(dataColumnNames)
+                .data(columnNames)
                 .enter().append("option")
                 .attr("class",function(d,i){
-                    return "selectorOption"+(i+1);
+                    return "selectorOption"+i;
                 })
                 .attr("value",function(d,i){
-                    return i+1;
+                    return i;
                 })
                 .text(function(d,i){
                     return d;
@@ -127,7 +132,7 @@
             this.infoTable.data([data])
                 .html(function(d,i){
                     if(d===null) return "";
-                    return "<div><strong>Regionas:</strong> "+d["properties"][this.columnNames[0]]+"</div><div><strong>Vertė:</strong> "+this.getShownValue(d["properties"][this.columnNames[this.columnShownId]])+"</div>";
+                    return "<div><strong>Region:</strong> "+d["properties"][this.indexColumnName]+"</div><div><strong>Value:</strong> "+this.getShownValue(d["properties"][this.columnNames[this.columnShownId]])+"</div>";
                 }.bind(this));
         }
         /* functions helping to visualize legend */
@@ -255,7 +260,7 @@
                 .data(features)
                 .enter().append("path")
                 .attr("class",function(d,i){
-                        return "regionPolygon region"+d["properties"][this.columnNames[0]];
+                        return "regionPolygon region"+d["properties"][this.indexColumnName];
                     }.bind(this))
                 .attr("d",pathFunction)
                 .attr("stroke",this.regionStrokeColor[0])
