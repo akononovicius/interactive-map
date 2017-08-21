@@ -52,28 +52,18 @@
             this.setupZoomListener();
         }
         /* loading and processing data */
-        loadData(url) {
-            /*
-             * load data from url, which points to json file in GeoJSON format (+ some additional info)
-             *
-             * Additional info (not present in GeoJSON format):
-             * + indexColumnName - which of the "properties" field specifies unique index for the
-             *   stored geo object
-             * + columnNames - array of strings, which specify plotable data stored in geo object
-             *   "properties" field 
-             * + defaultColumnId - integer specifying which of columnNames is plotted on default
-             *   (e.g., on load) 
-             */
-            d3.json(url,this.processData.bind(this));
+        loadData(url,indexColumnName,columnNames,defaultColumnId) {
+            d3.json(url,function(error,data){
+                if(error) return console.error(error);
+                this.processData(data,indexColumnName,columnNames,defaultColumnId);
+            }.bind(this));
         }
-        loadDataJSON(geojsonString) {
-            // load data from string in the extended GeoJSON format (see loadData for more details)
-            this.processData(false,JSON.parse(geojsonString));
+        loadDataJSON(geojsonString,indexColumnName,columnNames,defaultColumnId) {
+            this.processData(JSON.parse(geojsonString),indexColumnName,columnNames,defaultColumnId);
         }
-        processData(error,data) {
-            if(error) return console.error(error);
-            this.columnNames=data["columnNames"];
-            this.indexColumnName=data["indexColumnName"];
+        processData(data,indexColumnName,columnNames,defaultColumnId) {
+            this.columnNames=columnNames;
+            this.indexColumnName=indexColumnName;
             // obtain projection tailored to data
             var projection=this.setupProjection(data);
             // create function to define paths
@@ -81,9 +71,9 @@
             // draw geo features and set their properties
             this.drawGeoPolygons(this.mapLayer,data.features,geoPath);
             // show default data
-            this.showData(data["defaultColumnId"]);
+            this.showData(defaultColumnId);
             // construct selector for available data
-            this.showSelector(data["columnNames"]);
+            this.showSelector();
             // listen for clicks
             this.setupClickListener();
         }
@@ -105,12 +95,13 @@
             this.showLegendForeground(colorScale,legendBgParams);
             this.setLegendWidth();
         }
-        showSelector(columnNames) {
+        showSelector() {
             var wrapper=d3.select("#"+this.wrapperId);
+            wrapper.selectAll(".upperControls").remove();
             var upperControls=wrapper.insert("div",":first-child").attr("class","upperControls");
             var dataSelector=upperControls.append("select").attr("class","dataSelector");
             dataSelector.selectAll("option")
-                .data(columnNames)
+                .data(this.columnNames)
                 .enter().append("option")
                 .attr("class",function(d,i){
                     return "selectorOption"+i;
@@ -300,6 +291,35 @@
             return this.getBindedData().map(function(d){
                         return d["properties"][columnName];
                     }.bind(this));
+        }
+        setBindedData(columnName,valueArr,defaultValue=null) {
+            this.getBindedData().map(function(d){
+                var v=valueArr[d["properties"][this.indexColumnName]];
+                if(typeof v==="undefined") {
+                    if(typeof defaultValue!=="function") {
+                        v=defaultValue;
+                    } else {
+                        v=defaultValue();
+                    }
+                }
+                d["properties"][columnName]=v;
+            }.bind(this));
+        }
+        addPlottedData(columnName,valueArr,defaultValue=null,silent=false) {
+            // add or update binded data
+            this.setBindedData(columnName,valueArr,defaultValue);
+            // if data is added or update and plotted, then update selector
+            var columnId=this.columnNames.indexOf(columnName);
+            var newColumn=columnId<0;
+            if(newColumn) {
+                columnId=this.columnNames.push(columnName)-1;
+            }
+            if(!silent) {//may plot the added data
+                this.showData(columnId);
+            }
+            if(newColumn || !silent) {// if data is new or plotted
+                this.showSelector();
+            }
         }
         /* dealing with map pan and zoom */
         setupZoomListener() {

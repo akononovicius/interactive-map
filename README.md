@@ -11,15 +11,9 @@ var mapObject=new map.map("wrapper",[width,height]);
 
 And submit GeoJSON file URL to be loaded
 ```javascript
-mapObject.loadData("./data/geojson-wgs84.json");
+mapObject.loadData("./data/geojson-wgs84.json","index_col",["plottable_1","plottable_2"],0);
 ```
-
-GeoJSON file must have the following additional fields:
-* "indexColumnName" - string, which specifies unique index (out of available geo object "properties")
-* "columnNames" - array of strings, which specify plotable data (out of available geo object "properties")
-* "defaultColumnId" - integer specifying which of columnNames is plotted on default (e.g., on load)
-
-When data is loaded and processed default values are plotted.
+In this example we have chosen to load "geojson-wgs84.json" file, which contains data in GeoJSON format. The code above assumes that each geographical shape has at least three properties: `index_col` (value must be unique), `plottable_1` and `plottable_2` (values must be numeric). When data is loaded and processed the map is plotted and shapes are filled with colors according to respective shapes' `plottable_1` values (because fourth parameter is 0). At a later point user would be able to color map based on `plottable_2` values.
 
 # Dependencies
 
