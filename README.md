@@ -14,8 +14,9 @@ And submit GeoJSON file URL to be loaded
 mapObject.loadData("./data/geojson-wgs84.json");
 ```
 
-GeoJSON file must have two additional fields:
-* "columnNames" - array of strings, which specify index and plotable data stored in geo object "properties"
+GeoJSON file must have the following additional fields:
+* "indexColumnName" - string, which specifies unique index (out of available geo object "properties")
+* "columnNames" - array of strings, which specify plotable data (out of available geo object "properties")
 * "defaultColumnId" - integer specifying which of columnNames is plotted on default (e.g., on load)
 
 When data is loaded and processed default values are plotted.
