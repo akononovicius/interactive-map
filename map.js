@@ -49,6 +49,7 @@
             this.mapLayer=this.svg.append("g").attr("class","mapLayer");
             this.legendLayer=this.svg.append("g").attr("class","legendLayer");
             this.infoTable=d3.select("#"+this.wrapperId).append("div").attr("class","infoTable");
+            this.fixedColorScale=null;
             this.setupZoomListener();
         }
         /* loading and processing data */
@@ -157,10 +158,9 @@
         /* functions helping to visualize foreground of the legend */
         showLegendColors(colorScale,bgParams) {
             var legendFgColors=this.legendLayer.append("g").attr("class","legendFgColors");
+            var data=colorScale.range();
             legendFgColors.selectAll("rect")
-                .data(colorScale.range().map(function(d){
-                        return colorScale.invertExtent(d);
-                    }))
+                .data(data)
                 .enter().append("rect")
                 .attr("class",function(d,i){
                     return "legendColorRect legendColorRect"+i;
@@ -172,23 +172,30 @@
                 .attr("height",this.legendColorForm[1])
                 .attr("width",this.legendColorForm[0])
                 .attr("fill",function(d,i){
-                    return colorScale(d[0]);
+                    return d;
                 })
                 .attr("stroke-width",0);
         }
         showLegendColorLabels(colorScale,bgParams) {
-            // estimate quantile bounds
+            // estimate bounds
             var i;
-            var l=colorScale.quantiles().length+1;
+            var dcs=null;
+            if(typeof colorScale.quantiles==="function") {
+                dcs=colorScale.quantiles();
+            } else {
+                dcs=colorScale.domain();
+                dcs=dcs.slice(0,dcs.length-1);
+            }
+            var l=dcs.length+1;
             var legendDataArr=new Array(l);
             /*
              * FUTURE: null could be replaced with known min bound / max bound
              * (this is not the same as min / max of the data)
              */
-            legendDataArr[0]=[null,colorScale.quantiles()[0]];
-            legendDataArr[l-1]=[colorScale.quantiles()[l-2],null];
+            legendDataArr[0]=[null,dcs[0]];
+            legendDataArr[l-1]=[dcs[l-2],null];
             for(i=1;i<l-1;i+=1) {
-                legendDataArr[i]=[colorScale.quantiles()[i-1],colorScale.quantiles()[i]];
+                legendDataArr[i]=[dcs[i-1],dcs[i]];
             }
             // fill text labels using the estimated quantile bounds
             var legendFgText=this.legendLayer.append("g").attr("class","legendFgText");
@@ -271,6 +278,9 @@
         }
         /* dealing with color scale */
         getColorScale(data) {
+            if(this.fixedColorScale!==null) {
+                return this.fixedColorScale;
+            }
             var i,l;
             var colorGenerator=d3.interpolateLab(this.legendColors[2],this.legendColors[3]);
             var colorArr=new Array(5);
@@ -279,6 +289,20 @@
                 colorArr[i]=colorGenerator(i/(l-1));
             }
             return d3.scaleQuantile().domain(data).range(colorArr);
+        }
+        setFixedColorScale(pivots) {
+            var i,l;
+            var colorGenerator=d3.interpolateLab(this.legendColors[2],this.legendColors[3]);
+            var colorArr=new Array(pivots.length);
+            l=colorArr.length;
+            for(i=0;i<l;i+=1) {
+                colorArr[i]=colorGenerator(i/(l-1));
+            }
+            this.fixedColorScale=d3.scaleThreshold()
+                .domain(pivots).range(colorArr);
+        }
+        unsetFixedColorScale() {
+            this.fixedColorScale=null;
         }
         /* getting binded data */
         getBindedData() {
