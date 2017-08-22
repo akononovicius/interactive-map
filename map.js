@@ -52,6 +52,7 @@
             this.customLegendGenerator=null;// callback for custom function which generates legend (two variables are passed - this map object and colorScale)
             this.customSelectorGenerator=null;// callback for custom function which generates selector (one variable is passed - this map object)
             this.customColorScaleGenerator=null;// callback for custom function which generates color scale (two variables are passed - this map object and data; function must return d3 color scale)
+            this.customInfoLabelGenerator=null;// callback for custom function which generates info labels (two variables are passed - this map object and data; function must return html formatted string)
             this.setupZoomListener();
         }
         /* loading and processing data */
@@ -93,21 +94,21 @@
             this.showLegend(colorScale);
         }
         showLegend(colorScale) {
+            this.removeLegend();
             if(typeof this.customLegendGenerator==="function") {
                 this.customLegendGenerator(this,colorScale);
                 return;
             }
-            this.removeLegend();
             var legendBgParams=this.showLegendBackground(colorScale);
             this.showLegendForeground(colorScale,legendBgParams);
             this.setLegendWidth();
         }
         showSelector() {
+            this.removeSelector();
             if(typeof this.customSelectorGenerator==="function") {
                 this.customSelectorGenerator(this);
                 return;
             }
-            this.wrapper.selectAll(".upperControls").remove();
             var upperControls=this.wrapper.insert("div",":first-child").attr("class","upperControls");
             var dataSelector=upperControls.append("select").attr("class","dataSelector");
             dataSelector.selectAll("option")
@@ -131,10 +132,17 @@
         }
         showInfoTable(data=null) {
             this.infoTable.data([data])
-                .html(function(d,i){
+                .html(function(d){
                     if(d===null) return "";
+                    if(typeof this.customInfoLabelGenerator==="function") {
+                        return this.customInfoLabelGenerator(this,d);
+                    }
                     return "<div><strong>Region:</strong> "+d["properties"][this.indexColumnName]+"</div><div><strong>Value:</strong> "+this.getShownValue(d["properties"][this.columnNames[this.columnShownId]])+"</div>";
                 }.bind(this));
+        }
+        /* functions helping to visualize selector*/
+        removeSelector() {
+            this.wrapper.selectAll(".upperControls").remove();
         }
         /* functions helping to visualize legend */
         showLegendBackground(colorScale) {
