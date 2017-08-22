@@ -33,11 +33,11 @@
         constructor(wrapperId,dimensions,regionStrokeWidth=[0.5,2],regionStrokeColor=["#fff","#000"],
                     mapScalingConstant=1.8,legendForm=[10,550,2,16,2],legendColorForm=[50,10,10,10],
                     legendColors=["#fff","#000","rgb(201,223,138)","rgb(54,128,45)","#000"]) {
-            this.svg=d3.select("#"+wrapperId).append("svg") // svg in which map is shown (object)
+            this.wrapper=d3.select("#"+wrapperId);// wrap in which all elements are placed (object)
+            this.svg=this.wrapper.append("svg") // svg in which map is shown (object)
                 .attr("class","mapPlot")
                 .attr("width",dimensions[0])
                 .attr("height",dimensions[1]);
-            this.wrapperId=wrapperId; // id of svg elements wrapper
             this.dimensions=dimensions;// size (width, height) of the map in px
             this.curZoomLevel=0;// current zoom level
             this.regionStrokeWidth=regionStrokeWidth;// stroke width for: 0 - normal region, 1 - highlighted region
@@ -48,8 +48,10 @@
             this.legendColors=legendColors;// 0 - background fill, 1 - background stroke, 2 - color scale start, 3 - color scale end, 4 - font color
             this.mapLayer=this.svg.append("g").attr("class","mapLayer");
             this.legendLayer=this.svg.append("g").attr("class","legendLayer");
-            this.infoTable=d3.select("#"+this.wrapperId).append("div").attr("class","infoTable");
-            this.fixedColorScale=null;
+            this.infoTable=this.wrapper.append("div").attr("class","infoTable");
+            this.customLegendGenerator=null;// callback for custom function which generates legend (two variables are passed - this map object and colorScale)
+            this.customSelectorGenerator=null;// callback for custom function which generates selector (one variable is passed - this map object)
+            this.customColorScaleGenerator=null;// callback for custom function which generates color scale (two variables are passed - this map object and data; function must return d3 color scale)
             this.setupZoomListener();
         }
         /* loading and processing data */
@@ -91,15 +93,22 @@
             this.showLegend(colorScale);
         }
         showLegend(colorScale) {
+            if(typeof this.customLegendGenerator==="function") {
+                this.customLegendGenerator(this,colorScale);
+                return;
+            }
             this.removeLegend();
             var legendBgParams=this.showLegendBackground(colorScale);
             this.showLegendForeground(colorScale,legendBgParams);
             this.setLegendWidth();
         }
         showSelector() {
-            var wrapper=d3.select("#"+this.wrapperId);
-            wrapper.selectAll(".upperControls").remove();
-            var upperControls=wrapper.insert("div",":first-child").attr("class","upperControls");
+            if(typeof this.customSelectorGenerator==="function") {
+                this.customSelectorGenerator(this);
+                return;
+            }
+            this.wrapper.selectAll(".upperControls").remove();
+            var upperControls=this.wrapper.insert("div",":first-child").attr("class","upperControls");
             var dataSelector=upperControls.append("select").attr("class","dataSelector");
             dataSelector.selectAll("option")
                 .data(this.columnNames)
@@ -113,7 +122,7 @@
                 .text(function(d,i){
                     return d;
                 });
-            dataSelector.select("#"+this.wrapperId+" .dataSelector option.selectorOption"+(this.columnShownId))
+            dataSelector.select("option.selectorOption"+(this.columnShownId))
                 .attr("selected","selected");// mark default as selected
             var myMap=this;
             dataSelector.on("change",function(){
@@ -147,9 +156,9 @@
         }
         setLegendWidth() {
             // estimate width of the legend based on the legend parameters and actual bounding box of label layer
-            var legendTextWidth=d3.select("#"+this.wrapperId+" .legendFgText").node().getBBox()["width"];
+            var legendTextWidth=this.wrapper.select(".legendFgText").node().getBBox()["width"];
             var legendWidth=3.0*this.legendColorForm[2]+this.legendColorForm[0]+legendTextWidth+2;
-            this.legendLayer.select("#"+this.wrapperId+" .legendBgRect").select("rect")
+            this.legendLayer.select(".legendBgRect").select("rect")
                 .attr("width",legendWidth);
         }
         removeLegend() {
@@ -278,8 +287,8 @@
         }
         /* dealing with color scale */
         getColorScale(data) {
-            if(this.fixedColorScale!==null) {
-                return this.fixedColorScale;
+            if(typeof this.customColorScaleGenerator==="function") {
+                return this.customColorScaleGenerator(this,data);
             }
             var i,l;
             var colorGenerator=d3.interpolateLab(this.legendColors[2],this.legendColors[3]);
@@ -298,11 +307,10 @@
             for(i=0;i<l;i+=1) {
                 colorArr[i]=colorGenerator(i/(l-1));
             }
-            this.fixedColorScale=d3.scaleThreshold()
-                .domain(pivots).range(colorArr);
-        }
-        unsetFixedColorScale() {
-            this.fixedColorScale=null;
+            this.customColorScaleGenerator=function(myMap,data) {
+                return d3.scaleThreshold()
+                    .domain(pivots).range(colorArr);
+            }
         }
         /* getting binded data */
         getBindedData() {
