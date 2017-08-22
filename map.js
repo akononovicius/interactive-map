@@ -58,7 +58,9 @@
         /* loading and processing data */
         loadData(url,indexColumnName,columnNames,defaultColumnId) {
             d3.json(url,function(error,data){
-                if(error) return console.error(error);
+                if(error) {
+                    return console.error(error);
+                }
                 this.processData(data,indexColumnName,columnNames,defaultColumnId);
             }.bind(this));
         }
@@ -133,7 +135,9 @@
         showInfoTable(data=null) {
             this.infoTable.data([data])
                 .html(function(d){
-                    if(d===null) return "";
+                    if(d===null) {
+                        return "";
+                    }
                     if(typeof this.customInfoLabelGenerator==="function") {
                         return this.customInfoLabelGenerator(this,d);
                     }
@@ -246,7 +250,9 @@
             return seg1+"<";
         }
         getShownValue(val) {
-            if(val===null) return null;
+            if(val===null) {
+                return null;
+            }
             return val.toFixed(this.legendForm[4]);
         }
         /* setup projection */
