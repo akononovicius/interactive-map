@@ -56,18 +56,16 @@
             this.setupZoomListener();
         }
         /* loading and processing data */
-        loadData(url,indexColumnName,columnNames,defaultColumnId) {
+        loadData(url,indexColumnName,columnNames,defaultColumnName) {
+            this.ready=false;// flag which indicates whether everything is prepared for interaction
             d3.json(url,function(error,data){
                 if(error) {
                     return console.error(error);
                 }
-                this.processData(data,indexColumnName,columnNames,defaultColumnId);
+                this.processData(data,indexColumnName,columnNames,defaultColumnName);
             }.bind(this));
         }
-        loadDataJSON(geojsonString,indexColumnName,columnNames,defaultColumnId) {
-            this.processData(JSON.parse(geojsonString),indexColumnName,columnNames,defaultColumnId);
-        }
-        processData(data,indexColumnName,columnNames,defaultColumnId) {
+        processData(data,indexColumnName,columnNames,defaultColumnName) {
             this.columnNames=columnNames;
             this.indexColumnName=indexColumnName;
             // obtain projection tailored to data
@@ -77,23 +75,26 @@
             // draw geo features and set their properties
             this.drawGeoPolygons(this.mapLayer,data.features,geoPath);
             // show default data
-            this.showData(defaultColumnId);
+            this.showData(defaultColumnName);
             // construct selector for available data
             this.showSelector();
             // listen for clicks
             this.setupClickListener();
+            this.ready=true;// indicate that data was processed and everything is ready for interaction
         }
         /* show GUI elements */
-        showData(columnId) {
-            this.columnShownId=columnId;// set id of column that is currently shown
+        showData(columnName) {
+            this.columnShownName=columnName;// set name of column that is currently shown
+            this.columnShownId=this.columnNames.indexOf(columnName);// set id of column that is currently shown
             // extract relevant binded data
-            var allData=this.getBindedPropertyById(columnId);
+            var allData=this.getBindedPropertyByName(columnName);
             // get color scale function
             var colorScale=this.getColorScale(allData);
             // set fill color according to color scale function
-            this.fillGeoPolygons(this.mapLayer,columnId,colorScale);
+            this.fillGeoPolygons(this.mapLayer,columnName,colorScale);
             // show legend according to the color scale
             this.showLegend(colorScale);
+            this.setSelector();
         }
         showLegend(colorScale) {
             this.removeLegend();
@@ -111,6 +112,9 @@
                 this.customSelectorGenerator(this);
                 return;
             }
+            if(this.columnNames.length===0) {
+                return;
+            }
             var upperControls=this.wrapper.insert("div",":first-child").attr("class","upperControls");
             var dataSelector=upperControls.append("select").attr("class","dataSelector");
             dataSelector.selectAll("option")
@@ -120,13 +124,12 @@
                     return "selectorOption"+i;
                 })
                 .attr("value",function(d,i){
-                    return i;
+                    return d;
                 })
                 .text(function(d,i){
                     return d;
                 });
-            dataSelector.select("option.selectorOption"+(this.columnShownId))
-                .attr("selected","selected");// mark default as selected
+            this.setSelector();
             var myMap=this;
             dataSelector.on("change",function(){
                     myMap.showData(this.value);
@@ -141,12 +144,16 @@
                     if(typeof this.customInfoLabelGenerator==="function") {
                         return this.customInfoLabelGenerator(this,d);
                     }
-                    return "<div><strong>Region:</strong> "+d["properties"][this.indexColumnName]+"</div><div><strong>Value:</strong> "+this.getShownValue(d["properties"][this.columnNames[this.columnShownId]])+"</div>";
+                    return "<div><strong>Region:</strong> "+d["properties"][this.indexColumnName]+"</div><div><strong>Value:</strong> "+this.getShownValue(d["properties"][this.columnShownName])+"</div>";
                 }.bind(this));
         }
         /* functions helping to visualize selector*/
         removeSelector() {
             this.wrapper.selectAll(".upperControls").remove();
+        }
+        setSelector() {
+            this.wrapper.select("option.selectorOption"+(this.columnShownId))
+                .attr("selected","selected");
         }
         /* functions helping to visualize legend */
         showLegendBackground(colorScale) {
@@ -287,10 +294,10 @@
                 .attr("stroke",this.regionStrokeColor[0])
                 .attr("stroke-width",this.regionStrokeWidth[0]/this.currentZoomK);
         }
-        fillGeoPolygons(layer,columnId,colorScaleFunction) {
+        fillGeoPolygons(layer,columnName,colorScaleFunction) {
             layer.selectAll("path")
                 .attr("fill",function(d,i){
-                    return colorScaleFunction(d["properties"][this.columnNames[columnId]]);
+                    return colorScaleFunction(d["properties"][columnName]);
                 }.bind(this));
         }
         drawNormalizedRegions() {
@@ -355,13 +362,8 @@
             // add or update binded data
             this.setBindedData(columnName,valueArr,defaultValue);
             // if data is added or update and plotted, then update selector
-            var columnId=this.columnNames.indexOf(columnName);
-            var newColumn=columnId<0;
-            if(newColumn) {
-                columnId=this.columnNames.push(columnName)-1;
-            }
             if(!silent) {//may plot the added data
-                this.showData(columnId);
+                this.showData(columnName);
             }
             if(newColumn || !silent) {// if data is new or plotted
                 this.showSelector();
@@ -396,6 +398,27 @@
                 .attr("stroke-width",this.regionStrokeWidth[1]/this.currentZoomK)
                 .moveToFront();
             this.showInfoTable(region.__data__);
+        }
+        /* animation */
+        setupAnimation(interval,columnNames,loop=false) {
+            var frame=0;
+            var lastFrame=columnNames.length;
+            var myMap=this;
+            this.animationTimer=d3.interval(function(elapsed){
+                if(!myMap.ready) {
+                    return;
+                }
+                if(frame>=lastFrame) {
+                    if(loop) {
+                        frame-=lastFrame;
+                    } else {
+                        myMap.animationTimer.stop();
+                        return;
+                    }
+                }
+                mapObject.showData(columnNames[frame]);
+                frame+=1;
+            },interval);
         }
     }
 
