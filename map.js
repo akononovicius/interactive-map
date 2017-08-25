@@ -359,6 +359,10 @@
             }.bind(this));
         }
         addPlottedData(columnName,valueArr,defaultValue=null,silent=false) {
+            var newColumn=(this.columnNames.indexOf(columnName)==-1);
+            if(newColumn) {
+                this.columnNames.push(columnName);
+            }
             // add or update binded data
             this.setBindedData(columnName,valueArr,defaultValue);
             // if data is added or update and plotted, then update selector
