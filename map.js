@@ -30,14 +30,15 @@
     }
 
     class map {
-        constructor(wrapperId,dimensions,regionStrokeWidth=[0.5,2],regionStrokeColor=["#fff","#000"],
+        constructor(wrapperSelector,dimensions=null,regionStrokeWidth=[0.5,2],regionStrokeColor=["#fff","#000"],
                     mapScalingConstant=1.8,legendForm=[10,550,2,16,2],legendColorForm=[50,10,10,10],
                     legendColors=["#fff","#000","rgb(201,223,138)","rgb(54,128,45)","#000"]) {
-            this.wrapper=d3.select("#"+wrapperId);// wrap in which all elements are placed (object)
+            this.wrapper=d3.select(wrapperSelector);// wrap in which all elements are placed (object)
             this.svg=this.wrapper.append("svg") // svg in which map is shown (object)
-                .attr("class","mapPlot")
-                .attr("width",dimensions[0])
-                .attr("height",dimensions[1]);
+                .attr("class","mapPlot");
+                .attr("width","100%")
+                .attr("height","100%")
+                .attr("viewBox","0 0 "+dimensions[0]+" "+dimensions[1]);
             this.dimensions=dimensions;// size (width, height) of the map in px
             this.curZoomLevel=0;// current zoom level
             this.regionStrokeWidth=regionStrokeWidth;// stroke width for: 0 - normal region, 1 - highlighted region
