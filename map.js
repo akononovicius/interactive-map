@@ -53,6 +53,7 @@
             this.customSelectorGenerator=null;// callback for custom function which generates selector (one variable is passed - this map object)
             this.customColorScaleGenerator=null;// callback for custom function which generates color scale (two variables are passed - this map object and data; function must return d3 color scale)
             this.customInfoLabelGenerator=null;// callback for custom function which generates info labels (two variables are passed - this map object and data; function must return html formatted string)
+            this.customProjection=null;// callback for custom projection (two variables are passed - this map object and data; function must return d3 projection)
             this.setupZoomListener();
         }
         /* loading and processing data */
@@ -264,6 +265,9 @@
         }
         /* setup projection */
         setupProjection(data) {
+            if(typeof this.customProjection==="function") {
+                return this.customProjection(this,data);
+            }
             var params=this.setupProjectionParams(data);
             return d3.geoMercator()
                 .center(params["center"])
