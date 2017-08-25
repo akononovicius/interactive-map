@@ -35,7 +35,7 @@
                     legendColors=["#fff","#000","rgb(201,223,138)","rgb(54,128,45)","#000"]) {
             this.wrapper=d3.select(wrapperSelector);// wrap in which all elements are placed (object)
             this.svg=this.wrapper.append("svg") // svg in which map is shown (object)
-                .attr("class","mapPlot");
+                .attr("class","mapPlot")
                 .attr("width","100%")
                 .attr("height","100%")
                 .attr("viewBox","0 0 "+dimensions[0]+" "+dimensions[1]);
