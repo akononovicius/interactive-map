@@ -129,8 +129,8 @@
                     return d;
                 })
                 .text(function(d,i){
-                    return d;
-                });
+                    return this.translateSelectorText(d);
+                }.bind(this));
             this.setSelector();
             var myMap=this;
             dataSelector.on("change",function(){
@@ -156,6 +156,9 @@
         setSelector() {
             this.wrapper.select("option.selectorOption"+(this.columnShownId))
                 .attr("selected","selected");
+        }
+        translateSelectorText(d) {// override to get nicer selector labels
+            return d;
         }
         /* functions helping to visualize legend */
         showLegendBackground(colorScale) {
