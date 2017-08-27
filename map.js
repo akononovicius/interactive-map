@@ -32,15 +32,19 @@
     class map {
         constructor(wrapperSelector,dimensions=null,regionStrokeWidth=[0.5,2],regionStrokeColor=["#fff","#000"],
                     mapScalingConstant=1.8,legendForm=[10,10,2,16,2],legendColorForm=[50,10,10,10],
-                    legendColors=["#fff","#000","rgb(201,223,138)","rgb(54,128,45)","#000"]) {
+                    legendColors=["#fff","#000","rgb(201,223,138)","rgb(54,128,45)","#000"],fillOpacity=1.0) {
             this.wrapper=d3.select(wrapperSelector);// wrap in which all elements are placed (object)
-            this.svg=this.wrapper.append("svg") // svg in which map is shown (object)
-                .attr("class","mapPlot")
-                .attr("width","100%")
-                .attr("height","100%")
-                .attr("viewBox","0 0 "+dimensions[0]+" "+dimensions[1]);
+            this.svg=this.wrapper.select("svg"); // svg in which map is shown (object)
+            if(this.svg.node()===null) {
+                this.svg=this.wrapper.append("svg");
+            }
             this.dimensions=dimensions;// size (width, height) of the map in px
-            this.curZoomLevel=0;// current zoom level
+            if(this.dimensions!==null) {
+                this.svg.attr("width","100%")
+                    .attr("height","100%")
+                    .attr("viewBox","0 0 "+this.dimensions[0]+" "+this.dimensions[1]);
+            }
+            this.fillOpacity=fillOpacity;// opacity of region fills
             this.regionStrokeWidth=regionStrokeWidth;// stroke width for: 0 - normal region, 1 - highlighted region
             this.regionStrokeColor=regionStrokeColor;// stroke color for: 0 - normal region, 1 - highlighted region
             this.mapScalingConstant=mapScalingConstant;// relatively strange constant (influences automatic scaling)
@@ -58,13 +62,16 @@
             this.setupZoomListener();
         }
         /* loading and processing data */
-        loadData(url,indexColumnName,columnNames,defaultColumnName) {
+        loadData(url,indexColumnName,columnNames,defaultColumnName,onFinish=null) {
             this.ready=false;// flag which indicates whether everything is prepared for interaction
             d3.json(url,function(error,data){
                 if(error) {
                     return console.error(error);
                 }
                 this.processData(data,indexColumnName,columnNames,defaultColumnName);
+                if(onFinish!==null) {
+                    onFinish(this);
+                }
             }.bind(this));
         }
         processData(data,indexColumnName,columnNames,defaultColumnName) {
@@ -300,13 +307,14 @@
                     }.bind(this))
                 .attr("d",pathFunction)
                 .attr("stroke",this.regionStrokeColor[0])
-                .attr("stroke-width",this.regionStrokeWidth[0]/this.currentZoomK);
+                .attr("stroke-width",this.regionStrokeWidth[0]);
         }
         fillGeoPolygons(layer,columnName,colorScaleFunction) {
             layer.selectAll("path")
                 .attr("fill",function(d,i){
                     return colorScaleFunction(d["properties"][columnName]);
-                }.bind(this));
+                }.bind(this))
+                .attr("fill-opacity",this.fillOpacity);
         }
         drawNormalizedRegions() {
             this.mapLayer.selectAll("path")
@@ -383,12 +391,14 @@
         }
         /* dealing with map pan and zoom */
         setupZoomListener() {
-            this.currentZoomK=1.0;
-            var zoom=d3.zoom()
-                .scaleExtent([1,18])
-                .translateExtent([[0,0],this.dimensions])
-                .on("zoom",this.processZoomEvent.bind(this));
-            this.svg.call(zoom);
+            if(this.dimensions!==null) {
+                this.currentZoomK=1.0;
+                var zoom=d3.zoom()
+                    .scaleExtent([1,18])
+                    .translateExtent([[0,0],this.dimensions])
+                    .on("zoom",this.processZoomEvent.bind(this));
+                this.svg.call(zoom);
+            }
         }
         processZoomEvent() {
             this.currentZoomK=d3.event.transform.k;
