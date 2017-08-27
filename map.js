@@ -307,7 +307,7 @@
                     }.bind(this))
                 .attr("d",pathFunction)
                 .attr("stroke",this.regionStrokeColor[0])
-                .attr("stroke-width",this.regionStrokeWidth[0]);
+                .attr("stroke-width",this.regionStrokeWidth[0]/this.currentZoomK);
         }
         fillGeoPolygons(layer,columnName,colorScaleFunction) {
             layer.selectAll("path")
