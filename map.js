@@ -54,7 +54,7 @@
             this.mapLayer=this.svg.append("g").attr("class","mapLayer");
             this.legendLayer=this.svg.append("g").attr("class","legendLayer");
             this.infoTable=this.wrapper.append("div").attr("class","infoTable");
-            this.customLegendGenerator=null;// callback for custom function which generates legend (two variables are passed - this map object and colorScale)
+            this.customLegendGenerator=null;// callback for custom function which generates legend (one variable is passed - this map object)
             this.customSelectorGenerator=null;// callback for custom function which generates selector (one variable is passed - this map object)
             this.customColorScaleGenerator=null;// callback for custom function which generates color scale (two variables are passed - this map object and data; function must return d3 color scale)
             this.customInfoLabelGenerator=null;// callback for custom function which generates info labels (two variables are passed - this map object and data; function must return html formatted string)
@@ -98,21 +98,21 @@
             // extract relevant binded data
             var allData=this.getBindedPropertyByName(columnName);
             // get color scale function
-            var colorScale=this.getColorScale(allData);
+            this.colorScale=this.getColorScale(allData);
             // set fill color according to color scale function
-            this.fillGeoPolygons(this.mapLayer,columnName,colorScale);
+            this.fillGeoPolygons(this.mapLayer,columnName);
             // show legend according to the color scale
-            this.showLegend(colorScale);
+            this.showLegend();
             this.setSelector();
         }
-        showLegend(colorScale) {
+        showLegend() {
             this.removeLegend();
             if(typeof this.customLegendGenerator==="function") {
-                this.customLegendGenerator(this,colorScale);
+                this.customLegendGenerator(this);
                 return;
             }
-            var legendBgParams=this.showLegendBackground(colorScale);
-            this.showLegendForeground(colorScale,legendBgParams);
+            var legendBgParams=this.showLegendBackground();
+            this.showLegendForeground(legendBgParams);
             this.setLegendWidth();
         }
         showSelector() {
@@ -168,8 +168,8 @@
             return d;
         }
         /* functions helping to visualize legend */
-        showLegendBackground(colorScale) {
-            var legendHeight=this.legendColorForm[1]*(2.0*colorScale.range().length+1)
+        showLegendBackground() {
+            var legendHeight=this.legendColorForm[1]*(2.0*this.colorScale.range().length+1)
             var legendY=this.dimensions[1]-this.legendForm[1]-legendHeight;
             var legendBgRect=this.legendLayer.append("g").attr("class","legendBgRect");
             legendBgRect.append("rect")
@@ -181,9 +181,9 @@
                 .attr("stroke-width",this.legendForm[2]);
             return {"height":legendHeight,"y":legendY};
         }
-        showLegendForeground(colorScale,bgParams) {
-            this.showLegendColors(colorScale,bgParams);
-            this.showLegendColorLabels(colorScale,bgParams);
+        showLegendForeground(bgParams) {
+            this.showLegendColors(bgParams);
+            this.showLegendColorLabels(bgParams);
         }
         setLegendWidth() {
             // estimate width of the legend based on the legend parameters and actual bounding box of label layer
@@ -196,9 +196,9 @@
             this.legendLayer.selectAll("g").remove();
         }
         /* functions helping to visualize foreground of the legend */
-        showLegendColors(colorScale,bgParams) {
+        showLegendColors(bgParams) {
             var legendFgColors=this.legendLayer.append("g").attr("class","legendFgColors");
-            var data=colorScale.range();
+            var data=this.colorScale.range();
             legendFgColors.selectAll("rect")
                 .data(data)
                 .enter().append("rect")
@@ -216,14 +216,14 @@
                 })
                 .attr("stroke-width",0);
         }
-        showLegendColorLabels(colorScale,bgParams) {
+        showLegendColorLabels(bgParams) {
             // estimate bounds
             var i;
             var dcs=null;
-            if(typeof colorScale.quantiles==="function") {
-                dcs=colorScale.quantiles();
+            if(typeof this.colorScale.quantiles==="function") {
+                dcs=this.colorScale.quantiles();
             } else {
-                dcs=colorScale.domain();
+                dcs=this.colorScale.domain();
                 dcs=dcs.slice(0,dcs.length-1);
             }
             var l=dcs.length+1;
@@ -306,13 +306,14 @@
                         return "regionPolygon region"+d["properties"][this.indexColumnName];
                     }.bind(this))
                 .attr("d",pathFunction)
+                .attr("stroke-linejoin","round")
                 .attr("stroke",this.regionStrokeColor[0])
                 .attr("stroke-width",this.regionStrokeWidth[0]/this.currentZoomK);
         }
-        fillGeoPolygons(layer,columnName,colorScaleFunction) {
+        fillGeoPolygons(layer,columnName) {
             layer.selectAll("path")
                 .attr("fill",function(d,i){
-                    return colorScaleFunction(d["properties"][columnName]);
+                    return this.colorScale(d["properties"][columnName]);
                 }.bind(this))
                 .attr("fill-opacity",this.fillOpacity);
         }
