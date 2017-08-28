@@ -391,8 +391,8 @@
         }
         /* dealing with map pan and zoom */
         setupZoomListener() {
+            this.currentZoomK=1.0;
             if(this.dimensions!==null) {
-                this.currentZoomK=1.0;
                 var zoom=d3.zoom()
                     .scaleExtent([1,18])
                     .translateExtent([[0,0],this.dimensions])
