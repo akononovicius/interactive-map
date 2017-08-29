@@ -376,7 +376,7 @@
             }.bind(this));
         }
         addPlottedData(columnName,valueArr,defaultValue=null,silent=false) {
-            var newColumn=(this.columnNames.indexOf(columnName)==-1);
+            var newColumn=(this.columnNames.indexOf(columnName)===-1);
             if(newColumn) {
                 this.columnNames.push(columnName);
             }
@@ -389,6 +389,18 @@
             if(newColumn || !silent) {// if data is new or plotted
                 this.showSelector();
             }
+        }
+        remBindedData(columnName) {
+            var id=this.columnNames.indexOf(columnName);
+            if(id>-1) {
+                this.columnNames.splice(id,1);
+                this.showSelector();
+            }
+        }
+        delBindedData(columnName) {
+            this.getBindedData().map(function(d){
+                delete d["properties"][columnName];
+            });
         }
         /* dealing with map pan and zoom */
         setupZoomListener() {
