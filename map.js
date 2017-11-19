@@ -317,8 +317,8 @@
                 }.bind(this))
                 .attr("fill-opacity",this.fillOpacity);
         }
-        drawNormalizedRegions() {
-            this.mapLayer.selectAll("path")
+        drawNormalizedRegions(layer) {
+            layer.selectAll("path")
                 .attr("stroke",this.regionStrokeColor[0])
                 .attr("stroke-width",this.regionStrokeWidth[0]/this.currentZoomK);
             this.showInfoTable();
@@ -415,7 +415,7 @@
         }
         processZoomEvent() {
             this.currentZoomK=d3.event.transform.k;
-            this.drawNormalizedRegions();
+            this.drawNormalizedRegions(this.mapLayer);
             this.mapLayer.attr("transform",d3.event.transform);
         }
         /* dealing with clicks */
@@ -427,7 +427,7 @@
                 });
         }
         processClickEvent(region) {
-            this.drawNormalizedRegions();
+            this.drawNormalizedRegions(this.mapLayer);
             d3.select(region)
                 .attr("stroke",this.regionStrokeColor[1])
                 .attr("stroke-width",this.regionStrokeWidth[1]/this.currentZoomK)
