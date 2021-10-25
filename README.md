@@ -18,8 +18,3 @@ In this example we have chosen to load "geojson-wgs84.json" file, which contains
 # Dependencies
 
 Library depends on d3 v4.
-
-# License
-
-Work done here is rather trivial, so feel free to use it under [WTFPL version 2](http://www.wtfpl.net/).
-
