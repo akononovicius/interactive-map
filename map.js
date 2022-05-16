@@ -3,7 +3,7 @@
  *              geospatial data and allows limited interaction with it.
  * Author:      Aleksejus Kononovicius (http://kononovicius.lt)
  * URL:         https://github.com/akononovicius/interactive-map
- * License:     WTFPL version 2 (http://www.wtfpl.net/)
+ * License:     The Unlicense (https://unlicense.org/)
  */
 
 /* === Universal Module Definition === */
